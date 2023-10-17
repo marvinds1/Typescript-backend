@@ -44,8 +44,8 @@ export class AuthenticationService {
     const encryptPassword = bcrypt.hashSync(registerUserDto.password, 8);
     registerUserDto.password = encryptPassword;
     const newUser = new this.userModel(registerUserDto);
-    const uniqueId = await this.userModel.countDocuments();
-    newUser._id = (uniqueId + 1).toString();
+    const uniqueId = Date.now();
+    newUser._id = uniqueId.toString();
     await newUser.save();
 
     return {
@@ -58,8 +58,8 @@ export class AuthenticationService {
     const encryptPassword = bcrypt.hashSync(registerUserDto.password, 8);
     registerUserDto.password = encryptPassword;
     const newUser = new this.userModel(registerUserDto);
-    const uniqueId = await this.userModel.countDocuments();
-    newUser._id = (uniqueId + 1).toString();
+    const uniqueId = Date.now();
+    newUser._id = uniqueId.toString();
     newUser.isAdmin = true;
     await newUser.save();
 
@@ -107,8 +107,10 @@ export class AuthenticationService {
     try {
       const result = await this.userModel.deleteOne({ _id: id });
       if (result.deletedCount === 1) {
+        const deleteTrip = await this.userModel.deleteMany({ idUser: id });
+        const totalDeleteTrip = deleteTrip.deletedCount;
         return {
-          message: 'User has been deleted',
+          message: 'User has been deleted with ' + totalDeleteTrip + ' trip',
         };
       } else {
         return {

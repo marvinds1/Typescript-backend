@@ -15,9 +15,9 @@ export class TripService {
     if (tanggalMulaiPerjalanan > tanggalBerakhirPerjalanan) {
       throw new BadRequestException('Start date must be before end date');
     }
-    const uniqueId = await this.trip.countDocuments();
     const newTrip = new this.trip(createTripDto);
-    newTrip._id = (uniqueId + 21).toString();
+    const uniqueId = Date.now();
+    newTrip._id = uniqueId.toString();
     newTrip.save();
 
     return newTrip;
