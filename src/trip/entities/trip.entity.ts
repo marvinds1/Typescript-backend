@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 @Schema()
 export class Trip {
-  @Prop({ autoincrement: true, unique: true })
+  @Prop({ autoincrement: true })
   _id: string;
   @Prop({ required: true })
   destinasiPerjalanan: string;

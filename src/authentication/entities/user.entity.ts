@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 @Schema()
 export class User {
-  @Prop({ autoincrement: true, unique: true })
+  @Prop({ autoincrement: true })
   _id: string;
   @Prop({ required: true })
   name: string;
@@ -19,5 +19,4 @@ export class User {
   @Prop({ required: true, default: Date.now })
   updatedAt: string;
 }
-
 export const UserSchema = SchemaFactory.createForClass(User);
