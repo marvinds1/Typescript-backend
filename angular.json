@@ -1,0 +1,14 @@
+{
+    "projects": {
+      "your-app-name": {
+        "architect": {
+          "build": {
+            "options": {
+              "outputPath": "public"
+            }
+          }
+        }
+      }
+    }
+  }
+  
