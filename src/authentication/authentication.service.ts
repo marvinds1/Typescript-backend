@@ -45,7 +45,7 @@ export class AuthenticationService {
     registerUserDto.password = encryptPassword;
     const newUser = new this.userModel(registerUserDto);
     const uniqueId = await this.userModel.countDocuments();
-    newUser._id = (uniqueId + 1).toString();
+    newUser._id = (uniqueId + 87).toString();
     await newUser.save();
 
     return {
@@ -59,7 +59,7 @@ export class AuthenticationService {
     registerUserDto.password = encryptPassword;
     const newUser = new this.userModel(registerUserDto);
     const uniqueId = await this.userModel.countDocuments();
-    newUser._id = (uniqueId + 1).toString();
+    newUser._id = (uniqueId + 87).toString();
     newUser.isAdmin = true;
     await newUser.save();
 
@@ -103,8 +103,28 @@ export class AuthenticationService {
     };
   }
 
-  remove(id: number) {
-    this.userModel.findOneAndRemove({ where: { id } });
-    return `This action removes a #${id} authentication`;
+  async remove(id: string) {
+    try {
+      const result = await this.userModel.deleteOne({ _id: id });
+      if (result.deletedCount === 1) {
+        return {
+          message: 'User has been deleted',
+        };
+      } else {
+        return {
+          message: 'User not found',
+        };
+      }
+    } catch (error) {
+      if (error.name === 'CastError') {
+        return {
+          message: 'Invalid user ID format',
+        };
+      } else {
+        return {
+          message: 'An error occurred while deleting the user',
+        };
+      }
+    }
   }
 }

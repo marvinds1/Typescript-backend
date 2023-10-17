@@ -7,6 +7,7 @@ import {
   Request,
   Patch,
   Param,
+  Delete,
 } from '@nestjs/common';
 import { AuthenticationService } from './authentication.service';
 import { UserDto } from './dto/user.dto';
@@ -52,9 +53,9 @@ export class AuthenticationController {
   }
 
   @UseGuards(AutGuard, AdminGuard)
-  @Get('/delete/:id')
+  @Delete('/delete/:id')
   remove(@Param('id') id: string) {
-    return this.authenticationService.remove(+id);
+    return this.authenticationService.remove(id);
   }
 
   @UseGuards(AutGuard)
