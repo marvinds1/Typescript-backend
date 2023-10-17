@@ -45,7 +45,7 @@ export class AuthenticationController {
   }
 
   @UseGuards(AutGuard, AdminGuard)
-  @Patch('/update/:id')
+  @Patch('/:id')
   update(
     @Body() updateUserDto: UpdateAuthenticationDto,
     @Param('id') id: string,
@@ -54,7 +54,7 @@ export class AuthenticationController {
   }
 
   @UseGuards(AutGuard, AdminGuard)
-  @Delete('/delete/:id')
+  @Delete('/:id')
   remove(@Param('id') id: string) {
     return this.authenticationService.remove(id);
   }
