@@ -1,7 +1,7 @@
 {
     "version": 2,
     "env": {
-        "MONGO_URI": "Mongoooo"
+        "MONGO_URI": "Mlaku-mulu"
     },
     "builds": [
         {
