@@ -86,9 +86,9 @@ export class AuthenticationService {
     return `This action returns a #${id} authentication`;
   }
 
-  async update(id: number, updateUserDto: UpdateAuthenticationDto) {
+  async update(id: string, updateUserDto: UpdateAuthenticationDto) {
     const { name, password } = updateUserDto;
-    const user = await this.userModel.findById(id);
+    const user = await this.userModel.findOne({ _id: id });
     if (name == user.name) {
       throw new UnauthorizedException('invalid credentials... -name');
     }

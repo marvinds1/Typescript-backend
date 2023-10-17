@@ -50,7 +50,7 @@ export class AuthenticationController {
     @Body() updateUserDto: UpdateAuthenticationDto,
     @Param('id') id: string,
   ) {
-    return this.authenticationService.update(+id, updateUserDto);
+    return this.authenticationService.update(id, updateUserDto);
   }
 
   @UseGuards(AutGuard, AdminGuard)
