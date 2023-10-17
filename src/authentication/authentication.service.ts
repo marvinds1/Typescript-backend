@@ -45,7 +45,8 @@ export class AuthenticationService {
     registerUserDto.password = encryptPassword;
     const newUser = new this.userModel(registerUserDto);
     const uniqueId = Date.now();
-    newUser._id = uniqueId.toString();
+    const uniqueId2 = await this.userModel.countDocuments();
+    newUser._id = (uniqueId + uniqueId2).toString();
     await newUser.save();
 
     return {
@@ -59,7 +60,8 @@ export class AuthenticationService {
     registerUserDto.password = encryptPassword;
     const newUser = new this.userModel(registerUserDto);
     const uniqueId = Date.now();
-    newUser._id = uniqueId.toString();
+    const uniqueId2 = await this.userModel.countDocuments();
+    newUser._id = (uniqueId + uniqueId2).toString();
     newUser.isAdmin = true;
     await newUser.save();
 

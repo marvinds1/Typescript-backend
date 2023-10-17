@@ -17,7 +17,8 @@ export class TripService {
     }
     const newTrip = new this.trip(createTripDto);
     const uniqueId = Date.now();
-    newTrip._id = uniqueId.toString();
+    const uniqueId2 = await this.trip.countDocuments();
+    newTrip._id = (uniqueId + uniqueId2).toString();
     newTrip.save();
 
     return newTrip;
