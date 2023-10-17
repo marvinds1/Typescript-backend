@@ -1,7 +1,7 @@
 {
     "version": 2,
     "env": {
-        "MONGO_URI": "@mlaku_mulu_mongo_uri"
+        "MONGO_URI": "@mlaku_mulu_datacakra"
     },
     "builds": [
         {
