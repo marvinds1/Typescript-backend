@@ -58,6 +58,14 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
+## Dokumentasi
+
+https://documenter.getpostman.com/view/27754547/2s9YR85DWf
+
+## Deployment
+
+https://mlaku-mulu-backend.vercel.app/
+
 ## Support
 
 Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
