@@ -1,7 +1,7 @@
 {
-    "version": 1,
+    "version": 2,
     "env": {
-        "MONGO_URI": "mongodb+srv://rifqiafwan:yQsjPN7CMvuKuBH4@mlaku-mulu.mt6jrk0.mongodb.net/?retryWrites=true&w=majority"
+        "MONGO_URI": "Mongoooo"
     },
     "builds": [
         {
