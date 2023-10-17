@@ -28,6 +28,7 @@ export class AuthenticationController {
   }
 
   @Post('/register')
+  @UseGuards(AutGuard, AdminGuard)
   register(@Body() registerUserDto: UserDto) {
     return this.authenticationService.register(registerUserDto);
   }
