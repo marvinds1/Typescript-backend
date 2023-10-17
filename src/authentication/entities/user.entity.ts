@@ -14,9 +14,9 @@ export class User {
   isActive: boolean;
   @Prop({ default: false })
   isAdmin: boolean;
-  @Prop({ required: true })
+  @Prop({ required: true, default: Date.now })
   createdAt: string;
-  @Prop({ required: true })
+  @Prop({ required: true, default: Date.now })
   updatedAt: string;
 }
 
