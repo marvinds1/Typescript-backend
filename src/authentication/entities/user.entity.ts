@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 @Schema()
 export class User {
-  @Prop({ autoincrement: true })
+  @Prop({ autoincrement: true, unique: true })
   _id: string;
   @Prop({ required: true })
   name: string;

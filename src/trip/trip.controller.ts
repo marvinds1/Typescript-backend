@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  Request,
   UseGuards,
 } from '@nestjs/common';
 import { TripService } from './trip.service';
@@ -13,10 +14,14 @@ import { CreateTripDto } from './dto/create-trip.dto';
 import { UpdateTripDto } from './dto/update-trip.dto';
 import { AutGuard } from 'src/authentication/guards/auth.guard';
 import { AdminGuard } from 'src/authentication/guards/admin.guard';
+import { JwtService } from '@nestjs/jwt';
 
 @Controller('trip')
 export class TripController {
-  constructor(private readonly tripService: TripService) {}
+  constructor(
+    private readonly tripService: TripService,
+    private jwtService: JwtService,
+  ) {}
 
   @Post()
   @UseGuards(AdminGuard, AutGuard)
@@ -30,27 +35,30 @@ export class TripController {
     return this.tripService.findAll();
   }
 
-  @Get('/user/:id')
-  @UseGuards(AutGuard, AdminGuard)
-  findByUser(@Param('id') id: string) {
-    return this.tripService.findByUser(+id);
+  @Get('/mytrip')
+  @UseGuards(AutGuard)
+  findByUser(@Request() req: Request) {
+    const encryp = req.headers['authorization'];
+    const decoded = this.jwtService.decode(encryp.split(' ')[1]);
+    const id = decoded['user']._id;
+    return this.tripService.findByUser(id);
   }
 
   @Get('/:id')
   @UseGuards(AutGuard)
   findOne(@Param('id') id: string) {
-    return this.tripService.findOne(+id);
+    return this.tripService.findOne(id);
   }
 
   @Patch('/:id')
   @UseGuards(AdminGuard, AutGuard)
   update(@Param('id') id: string, @Body() updateTripDto: UpdateTripDto) {
-    return this.tripService.update(+id, updateTripDto);
+    return this.tripService.update(updateTripDto, id);
   }
 
-  @Delete(':id')
+  @Delete('/:id')
   @UseGuards(AdminGuard, AutGuard)
   remove(@Param('id') id: string) {
-    return this.tripService.remove(+id);
+    return this.tripService.remove(id);
   }
 }

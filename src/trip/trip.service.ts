@@ -17,7 +17,7 @@ export class TripService {
     }
     const uniqueId = await this.trip.countDocuments();
     const newTrip = new this.trip(createTripDto);
-    newTrip._id = (uniqueId + 1).toString();
+    newTrip._id = (uniqueId + 21).toString();
     newTrip.save();
 
     return newTrip;
@@ -28,22 +28,39 @@ export class TripService {
     return trips;
   }
 
-  async findByUser(id: number) {
+  async findByUser(id: string) {
     const trips = await this.trip.find({ idUser: id });
     return trips;
   }
 
-  async findOne(id: number) {
-    const trip = await this.trip.findOne({ _id: id });
-    return trip;
+  async findOne(id: string) {
+    try {
+      const result = await this.trip.findOne({ _id: id });
+      if (!result) {
+        throw new BadRequestException('Trip not found');
+      }
+      return result;
+    } catch (error) {
+      return error;
+    }
   }
 
-  async update(id: number, updateTripDto: UpdateTripDto) {
-    const { price, description, destinasiPerjalanan } = updateTripDto;
-    const updateTrip = await this.trip.findOne({ where: { id } });
+  async update(updateTripDto: UpdateTripDto, id: string) {
+    const {
+      price,
+      description,
+      destinasiPerjalanan,
+      idUser,
+      tanggalMulaiPerjalanan,
+      tanggalBerakhirPerjalanan,
+    } = updateTripDto;
+    const updateTrip = await this.trip.findOne({ _id: id });
     if (!updateTrip) {
       throw new BadRequestException('Trip not found');
     }
+    updateTrip.idUser = idUser;
+    updateTrip.tanggalMulaiPerjalanan = tanggalMulaiPerjalanan;
+    updateTrip.tanggalBerakhirPerjalanan = tanggalBerakhirPerjalanan;
     updateTrip.price = price;
     updateTrip.description = description;
     updateTrip.destinasiPerjalanan = destinasiPerjalanan;
@@ -52,7 +69,20 @@ export class TripService {
     return updateTrip;
   }
 
-  remove(id: number) {
-    return this.trip.findOneAndRemove({ where: { id } });
+  async remove(id: string) {
+    try {
+      const result = await this.trip.deleteOne({ _id: id });
+      if (result.deletedCount === 1) {
+        return {
+          message: 'Trip has been deleted',
+        };
+      } else {
+        return {
+          message: 'Trip not found',
+        };
+      }
+    } catch (error) {
+      return error;
+    }
   }
 }
