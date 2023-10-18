@@ -5,9 +5,9 @@ import {
   Body,
   UseGuards,
   Request,
-  Patch,
   Param,
   Delete,
+  Put,
 } from '@nestjs/common';
 import { AuthenticationService } from './authentication.service';
 import { UserDto } from './dto/user.dto';
@@ -45,7 +45,7 @@ export class AuthenticationController {
   }
 
   @UseGuards(AutGuard, AdminGuard)
-  @Patch('/:id')
+  @Put('/:id')
   update(
     @Body() updateUserDto: UpdateAuthenticationDto,
     @Param('id') id: string,

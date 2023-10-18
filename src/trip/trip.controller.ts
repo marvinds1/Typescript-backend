@@ -3,11 +3,11 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   Request,
   UseGuards,
+  Put,
 } from '@nestjs/common';
 import { TripService } from './trip.service';
 import { CreateTripDto } from './dto/create-trip.dto';
@@ -50,7 +50,7 @@ export class TripController {
     return this.tripService.findOne(id);
   }
 
-  @Patch('/:id')
+  @Put('/:id')
   @UseGuards(AdminGuard, AutGuard)
   update(@Param('id') id: string, @Body() updateTripDto: UpdateTripDto) {
     return this.tripService.update(updateTripDto, id);
