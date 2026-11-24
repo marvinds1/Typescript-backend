@@ -1,134 +1,95 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { UserDto } from './dto/user.dto';
-import { InjectModel } from '@nestjs/mongoose';
-import { User } from './entities/user.entity';
-import { Model } from 'mongoose';
-import * as bcrypt from 'bcrypt';
-import { AuthenticateUserDto } from './dto/authenticate-user.dto';
-import { UpdateAuthenticationDto } from './dto/update-authentication.dto';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { InjectModel } from '@nestjs/mongoose';
+import * as bcrypt from 'bcrypt';
+import { Model } from 'mongoose';
+import { Trip } from '../trip/entities/trip.entity';
+import { AuthenticateUserDto } from './dto/authenticate-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { UserDto } from './dto/user.dto';
+import { User } from './entities/user.entity';
+
+const BCRYPT_COST = 12;
+const DUMMY_HASH = bcrypt.hashSync('timing-equalizer', 10);
+
+type PublicUser = Omit<User, 'password'>;
 
 @Injectable()
 export class AuthenticationService {
   constructor(
-    @InjectModel(User.name) private userModel: Model<User>,
-    private jwtService: JwtService,
+    @InjectModel(User.name) private readonly userModel: Model<User>,
+    @InjectModel(Trip.name) private readonly tripModel: Model<Trip>,
+    private readonly jwtService: JwtService,
   ) {}
 
-  async authenticate(authenticateUserDto: AuthenticateUserDto) {
-    const { email, password } = authenticateUserDto;
-    const user = await this.userModel.findOne({ email: email });
-    if (!user) {
-      throw new UnauthorizedException('invalid credentials... -email');
+  private sign(user: Pick<User, '_id' | 'isAdmin'>) {
+    return this.jwtService.sign({ sub: user._id, isAdmin: user.isAdmin });
+  }
+
+  private toPublic(doc: { toObject(): User }): PublicUser {
+    const { password: _password, ...rest } = doc.toObject();
+    return rest;
+  }
+
+  async authenticate({ email, password }: AuthenticateUserDto) {
+    const user = await this.userModel
+      .findOne({ email, isActive: true })
+      .select('+password');
+    const valid = await bcrypt.compare(password, user?.password ?? DUMMY_HASH);
+    if (!user || !valid) throw new UnauthorizedException('Invalid credentials');
+    return { user: this.toPublic(user), token: this.sign(user) };
+  }
+
+  async createUser(dto: UserDto, isAdmin = false) {
+    const password = await bcrypt.hash(dto.password, BCRYPT_COST);
+    try {
+      const user = await this.userModel.create({ ...dto, password, isAdmin });
+      return { user: this.toPublic(user) };
+    } catch (err) {
+      if ((err as { code?: number })?.code === 11000)
+        throw new ConflictException('Email already registered');
+      throw err;
     }
-    if (!bcrypt.compareSync(password, user.password)) {
-      throw new UnauthorizedException('invalid credentials... -password');
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password: _, ...restOfUserDataNoPass } = user.toJSON();
-
-    return {
-      user: restOfUserDataNoPass,
-      token: this.jwtService.sign({ user }),
-    };
   }
 
-  async unAuthenticate() {
-    return {
-      message: 'user has been unauthenticated...',
-    };
-  }
-
-  async register(registerUserDto: UserDto) {
-    const encryptPassword = bcrypt.hashSync(registerUserDto.password, 8);
-    registerUserDto.password = encryptPassword;
-    const newUser = new this.userModel(registerUserDto);
-    const uniqueId = Date.now();
-    const uniqueId2 = await this.userModel.countDocuments();
-    newUser._id = (uniqueId + uniqueId2).toString();
-    await newUser.save();
-
-    return {
-      user: newUser,
-      token: this.jwtService.sign({ newUser }),
-    };
-  }
-
-  async registerAdmin(registerUserDto: UserDto) {
-    const encryptPassword = bcrypt.hashSync(registerUserDto.password, 8);
-    registerUserDto.password = encryptPassword;
-    const newUser = new this.userModel(registerUserDto);
-    const uniqueId = Date.now();
-    const uniqueId2 = await this.userModel.countDocuments();
-    newUser._id = (uniqueId + uniqueId2).toString();
-    newUser.isAdmin = true;
-    await newUser.save();
-
-    return {
-      user: newUser,
-      token: this.jwtService.sign({ newUser }),
-    };
-  }
-
-  findAll(): Promise<User[]> {
-    return this.userModel.find();
+  findAll(limit = 50, skip = 0) {
+    return this.userModel
+      .find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Math.min(limit, 200))
+      .lean();
   }
 
   async findUserById(id: string) {
-    const user = await this.userModel.findById(id);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password: _, ...restOfInfo } = user.toJSON();
-    return restOfInfo;
+    const user = await this.userModel.findById(id).lean();
+    if (!user) throw new NotFoundException('User not found');
+    return user;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} authentication`;
-  }
-
-  async update(id: string, updateUserDto: UpdateAuthenticationDto) {
-    const { name, password } = updateUserDto;
-    const user = await this.userModel.findOne({ _id: id });
-    if (name == user.name) {
-      throw new UnauthorizedException('invalid credentials... -name');
-    }
-    if (password == user.password) {
-      throw new UnauthorizedException('invalid credentials... -password');
-    }
-    const encryptPassword = bcrypt.hashSync(user.password, 8);
-    user.password = encryptPassword;
-    user.name = name;
-    await user.save();
-    return {
-      user: user,
-      token: this.jwtService.sign({ user }),
-    };
+  async update(id: string, dto: UpdateUserDto) {
+    const update: Partial<User> = { ...dto };
+    if (dto.password)
+      update.password = await bcrypt.hash(dto.password, BCRYPT_COST);
+    const user = await this.userModel.findByIdAndUpdate(
+      id,
+      { $set: update },
+      { new: true, runValidators: true },
+    );
+    if (!user) throw new NotFoundException('User not found');
+    return { user: this.toPublic(user) };
   }
 
   async remove(id: string) {
-    try {
-      const result = await this.userModel.deleteOne({ _id: id });
-      if (result.deletedCount === 1) {
-        const deleteTrip = await this.userModel.deleteMany({ idUser: id });
-        const totalDeleteTrip = deleteTrip.deletedCount;
-        return {
-          message: 'User has been deleted with ' + totalDeleteTrip + ' trip',
-        };
-      } else {
-        return {
-          message: 'User not found',
-        };
-      }
-    } catch (error) {
-      if (error.name === 'CastError') {
-        return {
-          message: 'Invalid user ID format',
-        };
-      } else {
-        return {
-          message: 'An error occurred while deleting the user',
-        };
-      }
-    }
+    const result = await this.userModel.deleteOne({ _id: id });
+    if (result.deletedCount === 0)
+      throw new NotFoundException('User not found');
+    const { deletedCount } = await this.tripModel.deleteMany({ idUser: id });
+    return { message: `User has been deleted with ${deletedCount} trip(s)` };
   }
 }

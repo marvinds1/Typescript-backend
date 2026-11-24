@@ -1,22 +1,25 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { randomUUID } from 'crypto';
 
-@Schema()
+@Schema({ timestamps: true, versionKey: false })
 export class User {
-  @Prop({ autoincrement: true })
+  @Prop({ type: String, default: () => randomUUID() })
   _id: string;
-  @Prop({ required: true })
+
+  @Prop({ required: true, trim: true, maxlength: 100 })
   name: string;
-  @Prop({ unique: true, required: true })
+
+  @Prop({ required: true, unique: true, lowercase: true, trim: true })
   email: string;
-  @Prop({ minlength: 6, required: true })
-  password?: string;
+
+  @Prop({ required: true, select: false })
+  password: string;
+
   @Prop({ default: true })
   isActive: boolean;
+
   @Prop({ default: false })
   isAdmin: boolean;
-  @Prop({ required: true, default: Date.now })
-  createdAt: string;
-  @Prop({ required: true, default: Date.now })
-  updatedAt: string;
 }
+
 export const UserSchema = SchemaFactory.createForClass(User);

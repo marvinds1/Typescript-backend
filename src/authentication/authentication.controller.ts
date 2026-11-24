@@ -1,71 +1,71 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  UseGuards,
-  Request,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  DefaultValuePipe,
+  Patch,
+  Post,
+  Query,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { AuthenticationService } from './authentication.service';
-import { UserDto } from './dto/user.dto';
 import { AuthenticateUserDto } from './dto/authenticate-user.dto';
-import { UpdateAuthenticationDto } from './dto/update-authentication.dto';
-import { AutGuard } from './guards/auth.guard';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { UserDto } from './dto/user.dto';
 import { AdminGuard } from './guards/admin.guard';
-import { User } from './entities/user.entity';
+import { AuthGuard, AuthUser } from './guards/auth.guard';
 
 @Controller('authentication')
 export class AuthenticationController {
-  jwtService: any;
   constructor(private readonly authenticationService: AuthenticationService) {}
 
   @Post('/login')
-  login(@Body() authenticateUserDto: AuthenticateUserDto) {
-    return this.authenticationService.authenticate(authenticateUserDto);
+  @Throttle({ default: { ttl: 15 * 60_000, limit: 20 } })
+  login(@Body() dto: AuthenticateUserDto) {
+    return this.authenticationService.authenticate(dto);
   }
 
   @Post('/register')
-  @UseGuards(AutGuard, AdminGuard)
-  register(@Body() registerUserDto: UserDto) {
-    return this.authenticationService.register(registerUserDto);
+  @UseGuards(AuthGuard, AdminGuard)
+  register(@Body() dto: UserDto) {
+    return this.authenticationService.createUser(dto);
   }
 
   @Post('/register/admin')
-  registerAdmin(@Body() registerUserDto: UserDto) {
-    return this.authenticationService.registerAdmin(registerUserDto);
+  @UseGuards(AuthGuard, AdminGuard)
+  registerAdmin(@Body() dto: UserDto) {
+    return this.authenticationService.createUser(dto, true);
   }
 
-  @UseGuards(AutGuard, AdminGuard)
   @Get('/getall')
-  findAll() {
-    return this.authenticationService.findAll();
-  }
-
-  @UseGuards(AutGuard, AdminGuard)
-  @Patch('/:id')
-  update(
-    @Body() updateUserDto: UpdateAuthenticationDto,
-    @Param('id') id: string,
+  @UseGuards(AuthGuard, AdminGuard)
+  findAll(
+    @Query('limit', new DefaultValuePipe(50), ParseIntPipe) limit: number,
+    @Query('skip', new DefaultValuePipe(0), ParseIntPipe) skip: number,
   ) {
-    return this.authenticationService.update(id, updateUserDto);
+    return this.authenticationService.findAll(limit, skip);
   }
 
-  @UseGuards(AutGuard, AdminGuard)
+  @Get('/check-token')
+  @UseGuards(AuthGuard)
+  checkToken(@Req() req: { user: AuthUser }) {
+    return this.authenticationService.findUserById(req.user.id);
+  }
+
+  @Patch('/:id')
+  @UseGuards(AuthGuard, AdminGuard)
+  update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
+    return this.authenticationService.update(id, dto);
+  }
+
   @Delete('/:id')
+  @UseGuards(AuthGuard, AdminGuard)
   remove(@Param('id') id: string) {
     return this.authenticationService.remove(id);
-  }
-
-  @UseGuards(AutGuard)
-  @Get('/check-token')
-  checkToken(@Request() req: Request) {
-    const user = req['user'] as User;
-    return {
-      user,
-      token: this.jwtService.sign({ user }),
-    };
   }
 }

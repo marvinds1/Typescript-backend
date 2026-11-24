@@ -1,8 +1,14 @@
-import { IsEmail, Length } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsEmail, IsString, MaxLength } from 'class-validator';
 
 export class AuthenticateUserDto {
   @IsEmail()
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim().toLowerCase() : value,
+  )
   email: string;
-  @Length(6, 20, { message: 'password must be between 6 and 20 characters' })
+
+  @IsString()
+  @MaxLength(72)
   password: string;
 }

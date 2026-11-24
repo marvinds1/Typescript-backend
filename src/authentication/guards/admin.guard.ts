@@ -1,20 +1,16 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt'; // Import service JWT dari NestJS
+import {
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
+import { AuthUser } from './auth.guard';
 
 @Injectable()
 export class AdminGuard implements CanActivate {
-  constructor(private jwtService: JwtService) {}
-
-  async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
-    const token = request.headers.authorization;
-
-    if (!token) {
-      return false; // Jika tidak ada token, akses ditolak.
-    }
-
-    const decoded = this.jwtService.decode(token.split(' ')[1]); // Decode token
-    const user = decoded['user']; // Ambil data user dari token
-    return user.isAdmin; // Jika isAdmin true, akses diberikan.
+  canActivate(context: ExecutionContext): boolean {
+    const { user } = context.switchToHttp().getRequest<{ user?: AuthUser }>();
+    if (!user?.isAdmin) throw new ForbiddenException();
+    return true;
   }
 }

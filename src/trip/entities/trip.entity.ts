@@ -1,24 +1,27 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { randomUUID } from 'crypto';
 
-@Schema()
+@Schema({ timestamps: true, versionKey: false })
 export class Trip {
-  @Prop({ autoincrement: true })
+  @Prop({ type: String, default: () => randomUUID() })
   _id: string;
-  @Prop({ required: true })
+
+  @Prop({ required: true, trim: true, maxlength: 200 })
   destinasiPerjalanan: string;
+
   @Prop({ required: true })
   tanggalMulaiPerjalanan: Date;
+
   @Prop({ required: true })
   tanggalBerakhirPerjalanan: Date;
-  @Prop({ required: true })
+
+  @Prop({ required: true, min: 0 })
   price: number;
-  @Prop({ required: true })
+
+  @Prop({ required: true, maxlength: 2000 })
   description: string;
-  @Prop({ required: true, default: Date.now })
-  createdAt: Date;
-  @Prop({ required: true, default: Date.now })
-  updatedAt: Date;
-  @Prop({ required: true })
+
+  @Prop({ required: true, index: true })
   idUser: string;
 }
 

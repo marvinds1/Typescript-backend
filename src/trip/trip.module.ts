@@ -1,21 +1,11 @@
 import { Module } from '@nestjs/common';
-import { TripService } from './trip.service';
+import { AuthenticationModule } from '../authentication/authentication.module';
 import { TripController } from './trip.controller';
-import { ConfigModule } from '@nestjs/config';
-import { MongooseModule } from '@nestjs/mongoose';
-import { Trip, TripSchema } from './entities/trip.entity';
+import { TripService } from './trip.service';
 
 @Module({
+  imports: [AuthenticationModule],
   controllers: [TripController],
   providers: [TripService],
-  imports: [
-    ConfigModule.forRoot(),
-    MongooseModule.forFeature([
-      {
-        name: Trip.name,
-        schema: TripSchema,
-      },
-    ]),
-  ],
 })
 export class TripModule {}
